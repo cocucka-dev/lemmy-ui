@@ -501,3 +501,22 @@ em-emoji-picker {
 .language-item:focus {
   background-color: var(--bs-info-bg-subtle) !important;
 }
+
+.news-landing .news-tag-cloud .badge {
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  transition: transform 0.15s ease-in-out;
+}
+
+.news-landing .news-tag-cloud .badge:hover {
+  transform: translateY(-2px);
+}
+
+.news-landing .news-feed article:last-child {
+  margin-bottom: 0;
+}
+
+.news-landing nav .btn {
+  min-width: 5rem;
+}
