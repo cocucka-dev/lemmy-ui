@@ -19,6 +19,10 @@ import {
   HomeFetchConfig,
   getHomeQueryParams,
 } from "@components/home/home";
+import {
+  NewsLanding,
+  NewsLandingFetchConfig,
+} from "@components/home/news-landing";
 import { Instances, InstancesFetchConfig } from "@components/home/instances";
 import { Legal } from "@components/home/legal";
 import {
@@ -112,6 +116,13 @@ export interface IRoutePropsWithFetch<
 export const routes: IRoutePropsWithFetch<RouteData, any, any>[] = [
   {
     path: `/`,
+    component: NewsLanding,
+    fetchInitialData: NewsLanding.fetchInitialData,
+    exact: true,
+    mountedSameRouteNavKey: "landing",
+  } as NewsLandingFetchConfig,
+  {
+    path: `/all`,
     component: Home,
     fetchInitialData: Home.fetchInitialData,
     exact: true,
