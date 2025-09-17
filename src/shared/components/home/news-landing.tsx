@@ -7,6 +7,7 @@ import { HtmlTags } from "@components/common/html-tags";
 import { SiteSidebar } from "./site-sidebar";
 import {
   EMPTY_REQUEST,
+  FailedRequestState,
   HttpService,
   LOADING_REQUEST,
   RequestState,
@@ -41,6 +42,40 @@ const COMMUNITY_SHORTCUTS = [
   "club",
   "blogs",
 ] as const;
+
+const MISSING_COMMUNITY_ERROR = "couldnt_find_object";
+
+function createEmptyPostsState(): RequestState<GetPostsResponse> {
+  return {
+    state: "success",
+    data: { posts: [] },
+  };
+}
+
+function isMissingCommunityError(
+  response: RequestState<GetPostsResponse>,
+): response is FailedRequestState {
+  if (response.state !== "failed") {
+    return false;
+  }
+
+  const { err } = response;
+
+  return (
+    err.name === MISSING_COMMUNITY_ERROR ||
+    err.message === MISSING_COMMUNITY_ERROR
+  );
+}
+
+function coerceMissingCommunity(
+  response: RequestState<GetPostsResponse>,
+): RequestState<GetPostsResponse> {
+  if (isMissingCommunityError(response)) {
+    return createEmptyPostsState();
+  }
+
+  return response;
+}
 
 type NewsLandingData = RouteDataResponse<{
   newsPosts: GetPostsResponse;
@@ -104,7 +139,11 @@ export class NewsLanding extends Component<
       client.getPosts({ type_: "Local", sort: "Top", limit: 10 }),
     ]);
 
-    return { newsPosts, galleryPosts, localTopPosts };
+    return {
+      newsPosts: coerceMissingCommunity(newsPosts),
+      galleryPosts: coerceMissingCommunity(galleryPosts),
+      localTopPosts,
+    };
   }
 
   get documentTitle(): string {
@@ -577,6 +616,10 @@ export class NewsLanding extends Component<
       HttpService.client.getPosts({ type_: "Local", sort: "Top", limit: 10 }),
     ]);
 
-    this.setState({ newsPosts, galleryPosts, localTopPosts });
+    this.setState({
+      newsPosts: coerceMissingCommunity(newsPosts),
+      galleryPosts: coerceMissingCommunity(galleryPosts),
+      localTopPosts,
+    });
   }
 }
