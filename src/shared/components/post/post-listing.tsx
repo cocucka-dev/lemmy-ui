@@ -6,7 +6,7 @@ import { formatRelativeDate, futureDaysToUnixTime } from "@utils/date";
 import { isImage, isVideo } from "@utils/media";
 import { canAdmin } from "@utils/roles";
 import classNames from "classnames";
-import { Component, linkEvent } from "inferno";
+import { Component, InfernoNode, linkEvent } from "inferno";
 import { Link } from "inferno-router";
 import { T } from "inferno-i18next-dess";
 import {
@@ -86,6 +86,7 @@ type PostListingProps = {
   myUserInfo: MyUserInfo | undefined;
   localSite: LocalSite;
   showDupes: ShowDupesType;
+  variant?: "default" | "minimal";
   onPostEdit(form: EditPost): Promise<RequestState<PostResponse>>;
   onPostVote(form: CreatePostLike): Promise<RequestState<PostResponse>>;
   onPostReport(form: CreatePostReport): Promise<void>;
@@ -187,22 +188,32 @@ export class PostListing extends Component<PostListingProps, PostListingState> {
 
   render() {
     const post = this.postView.post;
+    const isMinimal = this.props.variant === "minimal";
 
     return (
-      <div className="post-listing mt-2">
+      <div
+        className={classNames("post-listing", {
+          "mt-2": !isMinimal,
+          "post-listing--minimal": isMinimal,
+        })}
+      >
         {!this.state.showEdit ? (
           <>
             {this.listing()}
-            {this.state.imageExpanded && !this.props.hideImage && this.img}
-            {this.showBody &&
+            {!isMinimal &&
+              this.state.imageExpanded &&
+              !this.props.hideImage &&
+              this.img}
+            {!isMinimal &&
+              this.showBody &&
               post.url &&
               isMagnetLink(post.url) &&
               this.torrentHelp()}
-            {this.showBody && post.url && post.embed_title && (
+            {!isMinimal && this.showBody && post.url && post.embed_title && (
               <MetadataCard post={post} />
             )}
-            {this.showBody && this.videoBlock}
-            {this.showBody && this.body()}
+            {!isMinimal && this.showBody && this.videoBlock}
+            {!isMinimal && this.showBody && this.body()}
           </>
         ) : (
           <PostForm
@@ -955,6 +966,10 @@ export class PostListing extends Component<PostListingProps, PostListingState> {
   }
 
   listing() {
+    if (this.props.variant === "minimal") {
+      return this.minimalListing();
+    }
+
     return (
       <>
         {/* The mobile view*/}
@@ -1006,6 +1021,321 @@ export class PostListing extends Component<PostListingProps, PostListingState> {
         </div>
       </>
     );
+  }
+
+  minimalListing(): InfernoNode {
+    const pv = this.postView;
+    const post = pv.post;
+    const lastActivity =
+      post.newest_comment_time_at ?? post.updated_at ?? post.published_at;
+
+    return (
+      <>
+        <article
+          className={classNames("community-post-row", {
+            "community-post-row--unread": !pv.post_actions?.read_at,
+            "community-post-row--featured":
+              post.featured_community || post.featured_local,
+          })}
+        >
+          <div className="community-post-row__main">
+            <div className="community-post-row__title-line">
+              {this.minimalTitleLink}
+              {this.minimalStatusBadges}
+            </div>
+            {this.minimalMeta}
+          </div>
+          <div className="community-post-row__comments">
+            {this.minimalCommentsButton()}
+          </div>
+          <div className="community-post-row__activity">
+            {lastActivity ? (
+              <span
+                className="community-post-row__activity-time"
+                data-tippy-content={this.formatAbsoluteTime(lastActivity)}
+              >
+                <Icon
+                  icon={post.comments > 0 ? "message-square" : "clock"}
+                  classes="icon-inline me-1"
+                />
+                {formatRelativeDate(lastActivity)}
+              </span>
+            ) : (
+              <span className="community-post-row__activity-time text-muted">
+                —
+              </span>
+            )}
+            <div className="community-post-row__actions">
+              {this.isInteractable && this.minimalVotes()}
+              {this.minimalMarkAsReadButton()}
+              {this.minimalActionDropdown()}
+            </div>
+          </div>
+        </article>
+        {this.duplicatesInfo()}
+      </>
+    );
+  }
+
+  get minimalTitleLink(): InfernoNode {
+    const post = this.postView.post;
+    const url = post.url;
+    const titleClasses = classNames("community-post-row__title-link", {
+      "link-primary": post.featured_community || post.featured_local,
+    });
+    const title = (
+      <span
+        className="community-post-row__title-text"
+        dangerouslySetInnerHTML={mdToHtmlInline(post.name)}
+      />
+    );
+
+    if (url) {
+      return (
+        <>
+          <a
+            className={classNames(
+              titleClasses,
+              "community-post-row__title-link--external",
+            )}
+            href={url}
+            title={url}
+            rel={relTags}
+            target={this.linkTarget}
+          >
+            {title}
+          </a>
+          <span className="community-post-row__domain text-muted">
+            {hostname(url)}
+          </span>
+          <Link
+            to={`/post/${post.id}`}
+            className="community-post-row__comments-icon"
+            title={I18NextService.i18n.t("comments")}
+          >
+            <Icon icon="message-square" classes="icon-inline" />
+          </Link>
+        </>
+      );
+    }
+
+    return (
+      <Link
+        className={titleClasses}
+        to={`/post/${post.id}`}
+        title={I18NextService.i18n.t("comments")}
+      >
+        {title}
+      </Link>
+    );
+  }
+
+  get minimalStatusBadges(): InfernoNode {
+    const post = this.postView.post;
+    return (
+      <>
+        {post.featured_community && (
+          <Icon icon="pin" classes="icon-inline text-primary" />
+        )}
+        {post.featured_local && (
+          <Icon icon="pin" classes="icon-inline text-secondary" />
+        )}
+        {post.locked && (
+          <small
+            className="unselectable pointer text-muted"
+            data-tippy-content={I18NextService.i18n.t("locked")}
+          >
+            <Icon icon="lock" classes="icon-inline text-danger" />
+          </small>
+        )}
+        {post.removed && (
+          <small className="ms-2 badge text-bg-secondary">
+            {I18NextService.i18n.t("removed")}
+          </small>
+        )}
+        {post.deleted && (
+          <small
+            className="unselectable pointer ms-2 text-muted fst-italic"
+            data-tippy-content={I18NextService.i18n.t("deleted")}
+          >
+            <Icon icon="trash" classes="icon-inline text-danger" />
+          </small>
+        )}
+        {post.nsfw && (
+          <small className="ms-2 badge text-bg-danger">
+            {I18NextService.i18n.t("nsfw")}
+          </small>
+        )}
+      </>
+    );
+  }
+
+  get minimalMeta(): InfernoNode {
+    const pv = this.postView;
+    const languageName =
+      pv.post.language_id !== 0
+        ? this.props.allLanguages.find(lang => lang.id === pv.post.language_id)
+            ?.name
+        : undefined;
+
+    return (
+      <div className="community-post-row__meta">
+        <PersonListing
+          person={pv.creator}
+          myUserInfo={this.props.myUserInfo}
+          muted
+          hideAvatar
+        />
+        <UserBadges
+          classNames="ms-1"
+          isModerator={pv.creator_is_moderator}
+          isAdmin={pv.creator_is_admin}
+          creator={pv.creator}
+          isBanned={pv.creator_banned}
+          isBannedFromCommunity={pv.creator_banned_from_community}
+          myUserInfo={this.props.myUserInfo}
+          personActions={pv.person_actions}
+        />
+        {languageName && (
+          <span className="badge text-bg-light">{languageName}</span>
+        )}
+        {pv.post.scheduled_publish_time_at && (
+          <span className="badge text-bg-light">
+            {I18NextService.i18n.t("publish_in_time", {
+              time: formatRelativeDate(pv.post.scheduled_publish_time_at),
+            })}
+          </span>
+        )}
+        <span className="community-post-row__meta-time">
+          <Icon icon="clock" classes="icon-inline me-1" />
+          <MomentTime
+            published={pv.post.published_at}
+            updated={pv.post.updated_at}
+          />
+        </span>
+      </div>
+    );
+  }
+
+  minimalCommentsButton(): InfernoNode {
+    const pv = this.postView;
+    const title = I18NextService.i18n.t("number_of_comments", {
+      count: Number(pv.post.comments),
+      formattedCount: Number(pv.post.comments),
+    });
+    const unread = this.unreadCount;
+
+    return (
+      <div className="community-post-row__comments-inner">
+        <Link
+          className="community-post-row__comments-link"
+          title={title}
+          to={`/post/${pv.post.id}?scrollToComments=true`}
+          data-tippy-content={title}
+          onClick={this.props.onScrollIntoCommentsClick}
+        >
+          {pv.post.comments}
+        </Link>
+        {typeof unread === "number" && (
+          <span className="community-post-row__comments-unread badge rounded-pill text-bg-primary">
+            {unread}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  minimalVotes(): InfernoNode {
+    const { post } = this.postView;
+    return (
+      <VoteButtonsCompact
+        voteContentType={VoteContentType.Post}
+        id={post.id}
+        onVote={this.props.onPostVote}
+        subject={post}
+        myVote={this.postView.post_actions?.like_score}
+        myUserInfo={this.props.myUserInfo}
+        localSite={this.props.localSite}
+        disabled={!this.props.myUserInfo}
+      />
+    );
+  }
+
+  minimalMarkAsReadButton(): InfernoNode | undefined {
+    if (!(this.props.markable && this.props.myUserInfo)) {
+      return undefined;
+    }
+
+    return (
+      <button
+        type="button"
+        className="btn btn-link btn-sm p-0 community-post-row__action"
+        onClick={this.handleMarkPostAsRead}
+        data-tippy-content={
+          this.props.read
+            ? I18NextService.i18n.t("mark_as_unread")
+            : I18NextService.i18n.t("mark_as_read")
+        }
+        aria-label={
+          this.props.read
+            ? I18NextService.i18n.t("mark_as_unread")
+            : I18NextService.i18n.t("mark_as_read")
+        }
+      >
+        {this.state.readLoading ? (
+          <Spinner />
+        ) : (
+          <Icon
+            icon="check"
+            classes={classNames("icon-inline", {
+              "text-success": this.props.read,
+            })}
+          />
+        )}
+      </button>
+    );
+  }
+
+  minimalActionDropdown(): InfernoNode | undefined {
+    if (!(this.props.myUserInfo && this.isInteractable)) {
+      return undefined;
+    }
+
+    return (
+      <PostActionDropdown
+        postView={this.postView}
+        community={this.postView.community}
+        admins={this.props.admins}
+        crossPostParams={this.crossPostParams}
+        myUserInfo={this.props.myUserInfo}
+        onSave={this.handleSavePost}
+        onReport={this.handleReport}
+        onBlock={this.handleBlockPerson}
+        onEdit={this.handleEditClick}
+        onDelete={this.handleDeletePost}
+        onLock={this.handleModLock}
+        onFeatureCommunity={this.handleModFeaturePostCommunity}
+        onFeatureLocal={this.handleModFeaturePostLocal}
+        onRemove={this.handleRemove}
+        onBanFromCommunity={this.handleModBanFromCommunity}
+        onAppointCommunityMod={this.handleAppointCommunityMod}
+        onTransferCommunity={this.handleTransferCommunity}
+        onBanFromSite={this.handleModBanFromSite}
+        onPurgeUser={this.handlePurgePerson}
+        onPurgeContent={this.handlePurgePost}
+        onAppointAdmin={this.handleAppointAdmin}
+        onHidePost={this.handleHidePost}
+        onPersonNote={this.handlePersonNote}
+      />
+    );
+  }
+
+  formatAbsoluteTime(input: string): string {
+    const hasTimezoneOffset = /[+-]\d{2}:?\d{2}$/.test(input);
+    const normalized =
+      input.endsWith("Z") || hasTimezoneOffset ? input : `${input}Z`;
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? input : date.toLocaleString();
   }
 
   handleEditClick() {
