@@ -520,3 +520,176 @@ em-emoji-picker {
 .news-landing nav .btn {
   min-width: 5rem;
 }
+
+.post-listings--minimal {
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  overflow: hidden;
+}
+
+.post-listing--minimal {
+  padding: 0;
+  margin-top: 0 !important;
+  background-color: transparent;
+}
+
+.post-listings--minimal .post-listing--minimal {
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.post-listings--minimal .post-listing--minimal:last-child {
+  border-bottom: none;
+}
+
+.post-listing--minimal .community-post-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem 1.5rem;
+  padding: 0.75rem 1rem;
+  align-items: center;
+  background-color: var(--bs-body-bg);
+  border-left: 4px solid transparent;
+}
+
+.post-listing--minimal .community-post-row:hover {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.post-listing--minimal .community-post-row--featured {
+  border-left-color: var(--bs-primary);
+}
+
+.post-listing--minimal .community-post-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.post-listing--minimal .community-post-row__title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.post-listing--minimal .community-post-row__title-link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.post-listing--minimal
+  .community-post-row--unread
+  .community-post-row__title-link {
+  font-weight: 600;
+}
+
+.post-listing--minimal .community-post-row__title-link:hover,
+.post-listing--minimal .community-post-row__title-link:focus {
+  text-decoration: underline;
+}
+
+.post-listing--minimal .community-post-row__domain {
+  font-size: 0.875rem;
+}
+
+.post-listing--minimal .community-post-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color);
+}
+
+.post-listing--minimal .community-post-row__meta .person-listing {
+  color: inherit !important;
+}
+
+.post-listing--minimal .community-post-row__meta .badge {
+  font-weight: 500;
+}
+
+.post-listing--minimal .community-post-row__meta-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.post-listing--minimal .community-post-row__comments,
+.post-listing--minimal .community-post-row__activity {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.35rem;
+  text-align: right;
+}
+
+.post-listing--minimal .community-post-row__comments-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.post-listing--minimal .community-post-row__comments-link {
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+  text-decoration: none;
+}
+
+.post-listing--minimal .community-post-row__comments-link:hover,
+.post-listing--minimal .community-post-row__comments-link:focus {
+  color: var(--bs-body-color);
+  text-decoration: underline;
+}
+
+.post-listing--minimal .community-post-row__comments-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--bs-secondary-color);
+}
+
+.post-listing--minimal .community-post-row__comments-icon:hover,
+.post-listing--minimal .community-post-row__comments-icon:focus {
+  color: var(--bs-body-color);
+}
+
+.post-listing--minimal .community-post-row__comments-unread {
+  font-size: 0.75rem;
+}
+
+.post-listing--minimal .community-post-row__activity-time {
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.post-listing--minimal .community-post-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.post-listing--minimal .community-post-row__action {
+  color: var(--bs-secondary-color);
+}
+
+.post-listing--minimal .community-post-row__action:hover,
+.post-listing--minimal .community-post-row__action:focus {
+  color: var(--bs-body-color);
+}
+
+@media (max-width: 768px) {
+  .post-listing--minimal .community-post-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .post-listing--minimal .community-post-row__comments,
+  .post-listing--minimal .community-post-row__activity {
+    align-items: flex-start;
+    text-align: left;
+  }
+}

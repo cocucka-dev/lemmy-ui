@@ -34,6 +34,8 @@ import { PostListing } from "./post-listing";
 import { RequestState } from "../../services/HttpService";
 import { ShowDupesType } from "@utils/types";
 
+type PostListingVariant = "default" | "minimal";
+
 interface PostListingsProps {
   posts: PostView[];
   allLanguages: Language[];
@@ -47,6 +49,7 @@ interface PostListingsProps {
   myUserInfo: MyUserInfo | undefined;
   localSite: LocalSite;
   admins: PersonView[];
+  variant?: PostListingVariant;
   onPostEdit(form: EditPost): Promise<RequestState<PostResponse>>;
   onPostVote(form: CreatePostLike): Promise<RequestState<PostResponse>>;
   onPostReport(form: CreatePostReport): Promise<void>;
@@ -82,8 +85,13 @@ export class PostListings extends Component<PostListingsProps, any> {
   }
 
   render() {
+    const { variant = "default" } = this.props;
     return (
-      <div className="post-listings">
+      <div
+        className={`post-listings${
+          variant === "minimal" ? " post-listings--minimal" : ""
+        }`}
+      >
         {this.posts.length > 0 ? (
           this.posts.map((post_view, idx) => (
             <>
@@ -121,8 +129,11 @@ export class PostListings extends Component<PostListingsProps, any> {
                 read={!!post_view.post_actions?.read_at}
                 onMarkPostAsRead={this.props.onMarkPostAsRead}
                 onPersonNote={this.props.onPersonNote}
+                variant={variant}
               />
-              {idx + 1 !== this.posts.length && <hr className="my-3" />}
+              {variant !== "minimal" && idx + 1 !== this.posts.length && (
+                <hr className="my-3" />
+              )}
             </>
           ))
         ) : (

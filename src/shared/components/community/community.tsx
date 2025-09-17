@@ -575,6 +575,7 @@ export class Community extends Component<CommunityRouteProps, State> {
               posts={this.state.postsRes.data.posts}
               showDupes="ShowSeparately"
               markable
+              variant="minimal"
               enableNsfw={enableNsfw(siteRes)}
               showAdultConsentModal={this.isoData.showAdultConsentModal}
               allLanguages={siteRes.all_languages}
